@@ -1,3 +1,4 @@
+import asyncio
 import os
 import sys
 from pathlib import Path
@@ -227,7 +228,6 @@ def main():
     print(f"📄 Chat system prompt path: {CHAT_SYS_PROMPT_PATH or '(inline from GUI)'}")
     print(f"🔌 Contextual system prompt: {ENABLE_CONTEXTUAL_SYSTEM_PROMPT}")
     print("🔌 Starting Discord bot...")
-    import asyncio
     try:
         asyncio.run(_run_bot())
     except (KeyboardInterrupt, SystemExit):
