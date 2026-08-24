@@ -43,6 +43,9 @@ _setup_log_tee()
 
 def _start_health_server() -> None:
     """Start a lightweight background HTTP server for Render/Cloud health checks and port detection."""
+    if os.getenv("DANGO_WEB_MANAGED"):
+        return
+
     port_env = os.getenv("PORT") or (10000 if os.getenv("RENDER") else os.getenv("WEB_PORT"))
     if not port_env:
         return

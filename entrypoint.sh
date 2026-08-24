@@ -18,14 +18,10 @@ set -e
 [ -f /app/skills/example/SKILL.md.example ] || { \
     mkdir -p /app/skills && cp -r /app/skills.examples/. /app/skills/ 2>/dev/null || true; }
 
-# Wait for Web GUI setup to complete before starting the bot (only if config.yaml does not exist AND DISCORD_BOT_TOKEN is not in environment)
-if [ ! -f /app/data/config.yaml ] && [ -z "$DISCORD_BOT_TOKEN" ]; then
-    echo "⏳ Waiting for Web GUI setup to complete..."
-    echo "   Open your browser and go to http://localhost:17860 to finish setup"
-    until [ -f /app/data/config.yaml ] || [ -n "$DISCORD_BOT_TOKEN" ]; do
-        sleep 3
-    done
-    echo "✅ Setup complete, starting Bot..."
+# If explicitly requested to run bot alone (e.g. docker-compose bot service)
+if [ "$1" = "bot" ] || [ "$APP_MODE" = "bot" ]; then
+    exec uv run python main.py
 fi
 
-exec uv run python main.py
+# Default (Render / Cloud / Web GUI mode): Start Web GUI which serves the dashboard and manages the bot
+exec uv run uvicorn web.main:app --host 0.0.0.0 --port "${PORT:-17860}"

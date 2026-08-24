@@ -2,6 +2,8 @@ import asyncio
 import os
 import re
 import signal
+import subprocess
+import sys
 import tomllib
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -103,11 +105,59 @@ except Exception:
     VERSION = "0.1.0"
 
 
+_bot_proc: subprocess.Popen | None = None
+
+
+def _start_bot_process() -> bool:
+    global _bot_proc
+    if _bot_proc is not None and _bot_proc.poll() is None:
+        return True
+    try:
+        env = dict(os.environ)
+        env["DANGO_WEB_MANAGED"] = "1"
+        _bot_proc = subprocess.Popen(
+            [sys.executable, "main.py"],
+            env=env,
+        )
+        print(f"🤖 [web] Bot process spawned (PID: {_bot_proc.pid})", flush=True)
+        return True
+    except Exception as e:
+        print(f"❌ [web] Failed to spawn bot process: {e}", flush=True)
+        return False
+
+
+def _stop_bot_process() -> bool:
+    global _bot_proc
+    if _bot_proc is None or _bot_proc.poll() is not None:
+        _bot_proc = None
+        return True
+    try:
+        _bot_proc.terminate()
+        try:
+            _bot_proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            _bot_proc.kill()
+        _bot_proc = None
+        print("🛑 [web] Bot process stopped", flush=True)
+        return True
+    except Exception as e:
+        print(f"❌ [web] Failed to stop bot process: {e}", flush=True)
+        return False
+
+
+def _is_bot_running() -> bool:
+    return _bot_proc is not None and _bot_proc.poll() is None
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print(f"\n🍡 Dango Web GUI started", flush=True)
     print(f"   ➜  http://localhost:{WEB_PORT}\n", flush=True)
+    if not docker_api.available() and (is_setup_complete() or os.getenv("DISCORD_BOT_TOKEN")):
+        _start_bot_process()
     yield
+    if not docker_api.available():
+        _stop_bot_process()
 
 
 app = FastAPI(title="Dango", lifespan=lifespan)
@@ -146,6 +196,10 @@ async def setup_complete(
     config.fast_model = fast_model
     config.chat_sys_prompt = chat_sys_prompt
     save_config(config)
+    if not docker_api.available():
+        _stop_bot_process()
+        await asyncio.sleep(0.5)
+        _start_bot_process()
     return RedirectResponse("/overview", status_code=303)
 
 
@@ -161,7 +215,7 @@ async def overview_page(request: Request):
     config = load_config()
     return templates.TemplateResponse(
         request, "overview.html",
-        _ctx("overview", config=config.model_dump(), docker_available=docker_api.available()),
+        _ctx("overview", config=config.model_dump(), docker_available=True),
     )
 
 
@@ -273,13 +327,19 @@ _STATE_PILL = {
 
 @app.get("/api/bot/status", response_class=HTMLResponse)
 async def bot_status():
-    if not docker_api.available():
-        return _status_pill("bamboo", "No Docker")
-    ct = await docker_api.find_service("bot")
-    if not ct:
-        return _status_pill("bamboo", "not found")
-    state: str = ct.get("State", "unknown")
-    return _STATE_PILL.get(state, _status_pill("bamboo", state))
+    if docker_api.available():
+        ct = await docker_api.find_service("bot")
+        if not ct:
+            return _status_pill("bamboo", "not found")
+        state: str = ct.get("State", "unknown")
+        return _STATE_PILL.get(state, _status_pill("bamboo", state))
+
+    if _is_bot_running():
+        return _STATE_PILL["running"]
+    elif not is_setup_complete() and not os.getenv("DISCORD_BOT_TOKEN"):
+        return _status_pill("cream", "setup needed")
+    else:
+        return _STATE_PILL["exited"]
 
 
 _OK   = '<span class="badge badge-success badge-sm">✓ OK</span>'
@@ -289,28 +349,39 @@ _NOT_FOUND = '<span class="badge badge-warning badge-sm">Not found</span>'
 
 @app.post("/api/bot/start", response_class=HTMLResponse)
 async def bot_start():
-    ct = await docker_api.find_service("bot")
-    if not ct:
-        return _NOT_FOUND
-    ok = await docker_api.action(ct["Id"], "start")
+    if docker_api.available():
+        ct = await docker_api.find_service("bot")
+        if not ct:
+            return _NOT_FOUND
+        ok = await docker_api.action(ct["Id"], "start")
+        return _OK if ok else _FAIL
+    ok = _start_bot_process()
     return _OK if ok else _FAIL
 
 
 @app.post("/api/bot/stop", response_class=HTMLResponse)
 async def bot_stop():
-    ct = await docker_api.find_service("bot")
-    if not ct:
-        return _NOT_FOUND
-    ok = await docker_api.action(ct["Id"], "stop")
+    if docker_api.available():
+        ct = await docker_api.find_service("bot")
+        if not ct:
+            return _NOT_FOUND
+        ok = await docker_api.action(ct["Id"], "stop")
+        return _OK if ok else _FAIL
+    ok = _stop_bot_process()
     return _OK if ok else _FAIL
 
 
 @app.post("/api/bot/restart", response_class=HTMLResponse)
 async def bot_restart():
-    ct = await docker_api.find_service("bot")
-    if not ct:
-        return _NOT_FOUND
-    ok = await docker_api.action(ct["Id"], "restart")
+    if docker_api.available():
+        ct = await docker_api.find_service("bot")
+        if not ct:
+            return _NOT_FOUND
+        ok = await docker_api.action(ct["Id"], "restart")
+        return _OK if ok else _FAIL
+    _stop_bot_process()
+    await asyncio.sleep(0.5)
+    ok = _start_bot_process()
     return _OK if ok else _FAIL
 
 
