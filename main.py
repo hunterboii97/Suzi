@@ -39,6 +39,51 @@ def _setup_log_tee() -> None:
 
 _setup_log_tee()
 
+
+def _start_health_server() -> None:
+    """Start a lightweight background HTTP server for Render/Cloud health checks and port detection."""
+    port_env = os.getenv("PORT") or (10000 if os.getenv("RENDER") else os.getenv("WEB_PORT"))
+    if not port_env:
+        return
+
+    try:
+        port = int(port_env)
+    except ValueError:
+        return
+
+    import threading
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+
+    class _HealthHandler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(b"OK - Suzi / Dango Discord Bot is running\n")
+
+        def do_HEAD(self):
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain; charset=utf-8")
+            self.end_headers()
+
+        def log_message(self, format, *args):
+            # Suppress routine health check probe logging
+            pass
+
+    def _serve():
+        try:
+            server = HTTPServer(("0.0.0.0", port), _HealthHandler)
+            print(f"🌐 Health check HTTP server listening on 0.0.0.0:{port}")
+            server.serve_forever()
+        except Exception as e:
+            print(f"⚠️ Could not start health check HTTP server on port {port}: {e}")
+
+    thread = threading.Thread(target=_serve, daemon=True)
+    thread.start()
+
+
+_start_health_server()
+
 from dotenv import load_dotenv
 
 # Both load_dotenv() and inject_config_to_env() must run before any dango imports —
@@ -69,13 +114,22 @@ ENABLE_WORKSPACE = env_onoff_to_bool(os.getenv("ENABLE_WORKSPACE"))
 WORKSPACE_ROOT = os.getenv("WORKSPACE_ROOT", "workspace")
 WORKSPACE_SYS_PROMPT_PATH = os.getenv("WORKSPACE_SYS_PROMPT_PATH", "config/workspace_sys_prompt.txt")
 
-CHAT_SYS_PROMPT_PATH = os.getenv("CHAT_SYS_PROMPT_PATH")
+CHAT_SYS_PROMPT_PATH = os.getenv("CHAT_SYS_PROMPT_PATH", "config/chat_sys_prompt.txt")
 
 if _chat_sys_prompt_inline is not None:
     chat_system_prompt = _chat_sys_prompt_inline
 else:
-    with open(CHAT_SYS_PROMPT_PATH, encoding="utf-8") as file:
-        chat_system_prompt = file.read()
+    prompt_file = Path(CHAT_SYS_PROMPT_PATH)
+    if prompt_file.exists():
+        with open(prompt_file, encoding="utf-8") as file:
+            chat_system_prompt = file.read()
+    else:
+        example_file = Path("config/chat_sys_prompt.txt.example")
+        if example_file.exists():
+            with open(example_file, encoding="utf-8") as file:
+                chat_system_prompt = file.read()
+        else:
+            chat_system_prompt = "You are a helpful AI assistant in Discord."
 
 
 # Discord setup

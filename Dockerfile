@@ -28,4 +28,6 @@ RUN mkdir -p /app/skills.examples && \
 
 RUN chmod +x /app/entrypoint.sh
 
+EXPOSE 10000 17860
+
 ENTRYPOINT ["/app/entrypoint.sh"]
