@@ -187,6 +187,38 @@ async def on_ready():
         print(f"❌ Failed to sync commands: {e}")
 
 
+async def _run_bot() -> None:
+    if not DISCORD_BOT_TOKEN:
+        print("❌ DISCORD_BOT_TOKEN is not set. Please set it in your environment variables.")
+        while True:
+            await asyncio.sleep(3600)
+
+    retry_delay = 15
+    max_delay = 180
+    while True:
+        try:
+            async with bot:
+                await bot.start(DISCORD_BOT_TOKEN)
+        except discord.HTTPException as e:
+            if e.status == 429:
+                print(
+                    f"⚠️ Discord API rate limit / Cloudflare block (429): {e}\n"
+                    f"⏳ Waiting {retry_delay}s before reconnecting (IP rate limit cooldown)..."
+                )
+                await asyncio.sleep(retry_delay)
+                retry_delay = min(int(retry_delay * 1.5), max_delay)
+            else:
+                print(f"❌ Discord HTTP error ({e.status}): {e}")
+                await asyncio.sleep(10)
+        except (discord.GatewayNotFound, discord.ConnectionClosed) as e:
+            print(f"⚠️ Discord connection closed: {e}. Retrying in {retry_delay}s...")
+            await asyncio.sleep(retry_delay)
+            retry_delay = min(int(retry_delay * 1.5), max_delay)
+        except Exception as e:
+            print(f"❌ Unexpected error in Discord bot: {e}")
+            await asyncio.sleep(10)
+
+
 def main():
     print("🚀 Hello from dango!")
     print(f"🔑 Discord token loaded: {'✅' if DISCORD_BOT_TOKEN else '❌'}")
@@ -195,7 +227,11 @@ def main():
     print(f"📄 Chat system prompt path: {CHAT_SYS_PROMPT_PATH or '(inline from GUI)'}")
     print(f"🔌 Contextual system prompt: {ENABLE_CONTEXTUAL_SYSTEM_PROMPT}")
     print("🔌 Starting Discord bot...")
-    bot.run(DISCORD_BOT_TOKEN)
+    import asyncio
+    try:
+        asyncio.run(_run_bot())
+    except (KeyboardInterrupt, SystemExit):
+        pass
 
 
 if __name__ == "__main__":
