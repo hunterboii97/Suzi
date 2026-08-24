@@ -136,23 +136,6 @@ else:
             chat_system_prompt = "You are a helpful AI assistant in Discord."
 
 
-# Discord setup
-intents = discord.Intents.default()
-intents.message_content = True
-intents.members = True
-intents.guilds = True
-
-custom_activity = discord.CustomActivity(name=DISCORD_BOT_ACTIVITY)
-
-bot = commands.Bot(
-    command_prefix="!",
-    intents=intents,
-    activity=custom_activity,
-    status=discord.Status.online,
-)
-
-discord_workflow = create_discord_workflow()
-
 if not check_font_exists():
     print("🔤 Downloading Noto Sans CJK fonts for markdown table image rendering...")
     print("📦 This may take a few minutes depending on your connection (~100MB)")
@@ -164,45 +147,64 @@ if not check_font_exists():
         print("💡 You can try running 'uv run python utils/download_font.py' later")
 
 
-@bot.event
-async def setup_hook():
-    if ENABLE_WORKSPACE:
-        await workspace_context.init(WORKSPACE_ROOT, WORKSPACE_SYS_PROMPT_PATH)
-    await bot.add_cog(ChatCog(bot, discord_workflow, chat_system_prompt, runtime_config))
-    await bot.add_cog(AdminCog(bot, runtime_config))
+def create_bot() -> commands.Bot:
+    intents = discord.Intents.default()
+    intents.message_content = True
+    intents.members = True
+    intents.guilds = True
 
-    # User-defined slash commands from custom/*.py (gitignored). Loading is
-    # idempotent with the agent-tool loader; absent custom/ dir → no-op.
-    from dango.extensions import load_custom_modules, register_custom_commands
-    load_custom_modules()
-    register_custom_commands(bot)
+    custom_activity = discord.CustomActivity(name=DISCORD_BOT_ACTIVITY)
+    proxy = os.getenv("DISCORD_PROXY") or os.getenv("HTTPS_PROXY") or os.getenv("HTTP_PROXY") or None
 
+    new_bot = commands.Bot(
+        command_prefix="!",
+        intents=intents,
+        activity=custom_activity,
+        status=discord.Status.online,
+        proxy=proxy,
+    )
 
-@bot.event
-async def on_ready():
-    print(f"🚀 {bot.user} has connected to Discord!")
-    print(f"🤖 Bot ID: {bot.user.id}")
-    print(f"🔧 Connected to {len(bot.guilds)} guilds")
+    discord_workflow = create_discord_workflow()
 
-    try:
-        synced = await bot.tree.sync()
-        print(f"✅ Synced {len(synced)} command(s)")
-    except Exception as e:
-        print(f"❌ Failed to sync commands: {e}")
+    @new_bot.event
+    async def setup_hook():
+        if ENABLE_WORKSPACE:
+            await workspace_context.init(WORKSPACE_ROOT, WORKSPACE_SYS_PROMPT_PATH)
+        await new_bot.add_cog(ChatCog(new_bot, discord_workflow, chat_system_prompt, runtime_config))
+        await new_bot.add_cog(AdminCog(new_bot, runtime_config))
+
+        from dango.extensions import load_custom_modules, register_custom_commands
+        load_custom_modules()
+        register_custom_commands(new_bot)
+
+    @new_bot.event
+    async def on_ready():
+        print(f"🚀 {new_bot.user} has connected to Discord!")
+        print(f"🤖 Bot ID: {new_bot.user.id}")
+        print(f"🔧 Connected to {len(new_bot.guilds)} guilds")
+
+        try:
+            synced = await new_bot.tree.sync()
+            print(f"✅ Synced {len(synced)} command(s)")
+        except Exception as e:
+            print(f"❌ Failed to sync commands: {e}")
+
+    return new_bot
 
 
 async def _run_bot() -> None:
     if not DISCORD_BOT_TOKEN:
-        print("❌ DISCORD_BOT_TOKEN is not set. Please set it in your environment variables.")
+        print("❌ DISCORD_BOT_TOKEN is not set. Please set it in your environment variables or via Web GUI.")
         while True:
             await asyncio.sleep(3600)
 
     retry_delay = 15
     max_delay = 180
     while True:
+        bot_instance = create_bot()
         try:
-            async with bot:
-                await bot.start(DISCORD_BOT_TOKEN)
+            async with bot_instance:
+                await bot_instance.start(DISCORD_BOT_TOKEN)
         except discord.HTTPException as e:
             if e.status == 429:
                 print(
@@ -221,6 +223,12 @@ async def _run_bot() -> None:
         except Exception as e:
             print(f"❌ Unexpected error in Discord bot: {e}")
             await asyncio.sleep(10)
+        finally:
+            try:
+                if not bot_instance.is_closed():
+                    await bot_instance.close()
+            except Exception:
+                pass
 
 
 def main():
