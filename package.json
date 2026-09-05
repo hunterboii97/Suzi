@@ -1,15 +1,42 @@
 {
-  "name": "dango-docs",
-  "private": true,
+  "name": "discord-ai-bot-dashboard",
+  "version": "1.0.0",
+  "description": "Production-ready, token-efficient Discord AI Bot with Express Web Dashboard and Supabase memory management",
+  "main": "src/index.js",
   "type": "module",
-  "packageManager": "pnpm@11.5.1",
   "scripts": {
-    "docs:dev": "vitepress dev docs",
-    "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
   },
-  "devDependencies": {
-    "vitepress": "^1.6.3",
-    "vitepress-plugin-llms": "^1.7.6"
-  }
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "@supabase/supabase-js": "^2.48.1",
+    "cors": "^2.8.5",
+    "discord.js": "^14.17.3",
+    "dotenv": "^16.4.7",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "helmet": "^8.0.0",
+    "morgan": "^1.10.0",
+    "openai": "^4.83.0"
+  },
+  "keywords": [
+    "discord-bot",
+    "ai",
+    "gemini",
+    "openai",
+    "groq",
+    "deepseek",
+    "openrouter",
+    "supabase",
+    "express",
+    "dashboard",
+    "render"
+  ],
+  "author": "hunterboii97",
+  "license": "MIT"
 }

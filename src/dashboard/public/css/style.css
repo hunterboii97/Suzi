@@ -1,0 +1,142 @@
+/* ==============================================================================
+   PURE OLED BLACK DESIGN SYSTEM (#000000)
+   ============================================================================== */
+
+:root {
+  color-scheme: dark;
+  --oled-bg: #000000;
+  --oled-surface: #060606;
+  --oled-card: #0a0a0a;
+  --oled-card-hover: #101010;
+  --oled-border: #1a1a1a;
+  --oled-border-focus: #333333;
+  --accent-violet: #8b5cf6;
+  --accent-cyan: #06b6d4;
+  --accent-emerald: #10b981;
+}
+
+body {
+  background-color: var(--oled-bg);
+  background-image: 
+    radial-gradient(circle at 10% 10%, rgba(139, 92, 246, 0.04) 0%, transparent 40%),
+    radial-gradient(circle at 90% 90%, rgba(6, 182, 212, 0.04) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.02) 0%, transparent 60%);
+  background-attachment: fixed;
+  color: #ededed;
+}
+
+/* Custom OLED Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #000000;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #222222;
+  border-radius: 9999px;
+  border: 1px solid #111111;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3b3b3b;
+}
+
+/* OLED Glass Cards */
+.oled-card {
+  background-color: var(--oled-card);
+  border: 1px solid var(--oled-border);
+  box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+}
+
+.oled-card:hover {
+  border-color: #262626;
+}
+
+.oled-surface {
+  background-color: var(--oled-surface);
+  border: 1px solid var(--oled-border);
+}
+
+.oled-input {
+  background-color: #030303;
+  border: 1px solid var(--oled-border);
+  color: #ffffff;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.oled-input:focus {
+  border-color: var(--accent-violet);
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+  outline: none;
+}
+
+/* Range Slider */
+input[type="range"] {
+  height: 5px;
+  background: #181818;
+  border-radius: 9999px;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent-violet);
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.6);
+  border: 2px solid #000000;
+  transition: transform 0.1s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.8);
+  }
+}
+
+.glow-emerald {
+  animation: pulseGlow 2.5s infinite ease-in-out;
+}
+
+/* Code & Prompt Editor */
+.prompt-editor {
+  font-family: 'JetBrains Mono', monospace;
+  background-color: #020202;
+  border: 1px solid #1a1a1a;
+  line-height: 1.6;
+  tab-size: 2;
+}
+
+.prompt-editor:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.25);
+  outline: none;
+}

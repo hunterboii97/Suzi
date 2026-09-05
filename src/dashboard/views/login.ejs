@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | Suzi AI Core Control Center</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-[#000000] text-[#ededed] font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+  <!-- Glowing Background Orbs -->
+  <div class="absolute -top-40 -left-40 w-96 h-96 bg-violet-600/15 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-cyan-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+  <div class="w-full max-w-md relative z-10">
+    <div class="oled-card rounded-3xl p-8 text-center border border-[#1a1a1a] shadow-2xl shadow-black">
+      <!-- Icon & Header -->
+      <div class="w-16 h-16 bg-gradient-to-tr from-violet-600 via-indigo-600 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-violet-900/30 ring-1 ring-white/10">
+        <i class="fa-solid fa-bolt text-2xl text-white"></i>
+      </div>
+
+      <h1 class="text-2xl font-extrabold text-white tracking-tight mb-2">Suzi AI Core</h1>
+      <p class="text-zinc-400 text-xs mb-8 leading-relaxed">
+        Authenticate with your Discord Admin account to manage bot persona, live system prompts, multi-provider AI keys, and context memory.
+      </p>
+
+      <% if (error) { %>
+        <div class="mb-6 p-4 rounded-xl bg-rose-950/30 border border-rose-800/40 text-rose-300 text-xs text-left flex items-start gap-3">
+          <i class="fa-solid fa-circle-exclamation text-base mt-0.5 shrink-0 text-rose-400"></i>
+          <span><%= error %></span>
+        </div>
+      <% } %>
+
+      <!-- Discord Login Button -->
+      <a href="/auth/discord" class="group flex items-center justify-center gap-3 w-full py-3.5 px-6 bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold rounded-xl transition-all duration-200 shadow-lg shadow-[#5865F2]/25 hover:shadow-[#5865F2]/40 hover:-translate-y-0.5 active:translate-y-0 text-xs">
+        <i class="fa-brands fa-discord text-lg group-hover:scale-110 transition-transform"></i>
+        <span>Login with Discord</span>
+      </a>
+
+      <!-- Security Notice -->
+      <div class="mt-8 pt-6 border-t border-[#1a1a1a] flex items-center justify-center gap-2 text-[11px] text-zinc-500 font-mono">
+        <i class="fa-solid fa-shield-halved text-violet-400"></i>
+        <span>Restricted to authorized <code class="text-zinc-300 bg-[#111] px-1.5 py-0.5 rounded border border-[#222]">ADMIN_USER_IDS</code></span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

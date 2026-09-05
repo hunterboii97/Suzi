@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>403 Unauthorized | Suzi AI Core</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-[#000000] text-[#ededed] font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-lg">
+    <div class="oled-card rounded-3xl p-8 border border-rose-900/40 text-center shadow-2xl shadow-rose-950/20">
+      <!-- Warning Icon -->
+      <div class="w-16 h-16 bg-rose-950/30 border border-rose-800/40 rounded-2xl flex items-center justify-center mx-auto mb-6 text-rose-400 text-2xl shadow-lg shadow-rose-950/30">
+        <i class="fa-solid fa-lock"></i>
+      </div>
+
+      <h1 class="text-2xl font-bold text-white mb-2">Access Denied (403)</h1>
+      <p class="text-zinc-400 text-xs mb-6 leading-relaxed">
+        Your Discord account is authenticated, but your User ID is not authorized to access this administrative control center.
+      </p>
+
+      <!-- Account Info Box -->
+      <div class="bg-[#050505] border border-[#1a1a1a] rounded-2xl p-4 mb-6 text-left">
+        <div class="flex items-center gap-3 mb-3">
+          <% if (user.avatar) { %>
+            <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png" alt="Avatar" class="w-10 h-10 rounded-full ring-1 ring-zinc-700">
+          <% } else { %>
+            <div class="w-10 h-10 rounded-full bg-[#111] flex items-center justify-center text-zinc-400">
+              <i class="fa-solid fa-user"></i>
+            </div>
+          <% } %>
+          <div>
+            <div class="text-sm font-semibold text-white"><%= user.username %></div>
+            <div class="text-xs text-zinc-400 font-mono flex items-center gap-2">
+              <span>ID: <code id="userIdText" class="text-violet-400"><%= user.id %></code></span>
+              <button onclick="navigator.clipboard.writeText('<%= user.id %>'); alert('User ID copied to clipboard!');" class="text-zinc-500 hover:text-white transition-colors" title="Copy User ID">
+                <i class="fa-regular fa-copy text-xs"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-xs text-amber-300 bg-amber-950/20 border border-amber-800/30 p-3 rounded-xl">
+          <i class="fa-solid fa-triangle-exclamation mr-1 text-amber-400"></i>
+          To grant this account access, add this User ID to <code class="text-white font-mono font-semibold">ADMIN_USER_IDS</code> in your <code class="text-white font-mono">.env</code>:
+          <pre class="mt-2 p-2 bg-[#020202] rounded border border-[#1a1a1a] text-[11px] text-emerald-400 font-mono overflow-x-auto">ADMIN_USER_IDS="<%= user.id %>"</pre>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a href="/auth/logout" class="w-full py-3 px-4 bg-[#111] hover:bg-[#1a1a1a] border border-[#222] text-zinc-300 font-medium rounded-xl text-xs transition-all text-center">
+          <i class="fa-solid fa-arrow-right-from-bracket mr-2"></i> Switch Account
+        </a>
+        <a href="/auth/login" class="w-full py-3 px-4 bg-violet-600 hover:bg-violet-500 text-white font-bold rounded-xl text-xs transition-all text-center shadow-lg shadow-violet-950/50">
+          <i class="fa-solid fa-rotate-right mr-2"></i> Try Again
+        </a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
