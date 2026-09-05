@@ -21,11 +21,19 @@ export function getAdminUserIds() {
  * Compute the OAuth2 redirect URI based on environment settings.
  */
 function getRedirectUri(req) {
-  if (process.env.APP_URL) {
-    return `${process.env.APP_URL.replace(/\/$/, '')}/auth/discord/callback`;
+  // If APP_URL is explicitly set and is not localhost
+  if (process.env.APP_URL && !process.env.APP_URL.includes('localhost')) {
+    let cleanUrl = process.env.APP_URL.trim().replace(/\/$/, '');
+    if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+      cleanUrl = `https://${cleanUrl}`;
+    }
+    return `${cleanUrl}/auth/discord/callback`;
   }
-  const host = req.get('host');
-  const protocol = req.protocol === 'https' || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
+
+  // Dynamic detection from incoming request headers (e.g. Railway reverse proxy)
+  const host = req.get('x-forwarded-host') || req.get('host');
+  const isHttps = req.protocol === 'https' || req.get('x-forwarded-proto') === 'https' || (process.env.NODE_ENV === 'production' && !host.includes('localhost'));
+  const protocol = isHttps ? 'https' : 'http';
   return `${protocol}://${host}/auth/discord/callback`;
 }
 
@@ -47,6 +55,8 @@ router.get('/discord', (req, res) => {
   }
 
   const redirectUri = getRedirectUri(req);
+  console.log(`🔗 [OAuth2] Authorize request initiated with redirect_uri: "${redirectUri}"`);
+
   const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(
     redirectUri
   )}&response_type=code&scope=identify%20guilds`;
@@ -65,6 +75,7 @@ router.get('/discord/callback', async (req, res) => {
   const clientId = process.env.DISCORD_CLIENT_ID;
   const clientSecret = process.env.DISCORD_CLIENT_SECRET;
   const redirectUri = getRedirectUri(req);
+  console.log(`🔗 [OAuth2] Exchanging code with redirect_uri: "${redirectUri}"`);
 
   try {
     // Exchange authorization code for access token
