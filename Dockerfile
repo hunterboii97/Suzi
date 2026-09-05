@@ -1,33 +1,28 @@
-FROM python:3.12-slim
+# Production Node.js container for Suzi Discord Bot & Web Dashboard
+FROM node:20-alpine
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+# Install dumb-init to properly handle PID 1 signals (SIGINT, SIGTERM)
+RUN apk add --no-cache dumb-init
 
 WORKDIR /app
 
-# Cache dependencies separately from source changes
-COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-dev --no-install-project
+# Copy package manifests first for optimal layer caching
+COPY package*.json ./
 
+# Install production dependencies cleanly
+RUN npm ci --omit=dev
+
+# Copy application source and assets
 COPY . .
-RUN uv sync --frozen --no-dev
 
-# Store example configs at a path not shadowed by the config volume mount
-RUN mkdir -p /app/config.examples && \
-    cp /app/config/runtime.yml.example /app/config.examples/ && \
-    cp /app/config/chat_sys_prompt.txt.example /app/config.examples/
+# Expose web dashboard port (Railway injects PORT dynamically, defaults to 3000)
+EXPOSE 3000
 
-# Same for custom-extension templates — the ./custom volume mount shadows /app/custom,
-# so keep a copy the entrypoint can seed into the (empty) mounted dir on first run.
-RUN mkdir -p /app/custom.examples && \
-    cp /app/custom/*.example /app/custom/README.md /app/custom.examples/
+# Set production environment
+ENV NODE_ENV=production
 
-# Same for skill templates — the ./skills volume mount shadows /app/skills,
-# so keep a copy (README + example/) the entrypoint can seed on first run.
-RUN mkdir -p /app/skills.examples && \
-    cp -r /app/skills/. /app/skills.examples/
+# Use dumb-init to manage process lifecycle and graceful shutdown
+ENTRYPOINT ["dumb-init", "--"]
 
-RUN chmod +x /app/entrypoint.sh
-
-EXPOSE 10000 17860
-
-ENTRYPOINT ["/app/entrypoint.sh"]
+# Start both the Discord bot and Web Dashboard
+CMD ["node", "src/index.js"]

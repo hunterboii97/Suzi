@@ -1,0 +1,9 @@
+# Nixpacks configuration fallback for Railway
+[phases.setup]
+nixPkgs = ["nodejs_20"]
+
+[phases.install]
+cmds = ["npm ci --omit=dev"]
+
+[start]
+cmd = "node src/index.js"

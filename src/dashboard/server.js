@@ -87,8 +87,8 @@ export function createServer() {
     })
   );
 
-  // Trust first proxy for Render HTTPS load balancer
-  if (isProduction || process.env.RENDER) {
+  // Trust first proxy for Render / Railway HTTPS reverse proxies
+  if (isProduction || process.env.RENDER || process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_STATIC_URL) {
     app.set('trust proxy', 1);
   }
 

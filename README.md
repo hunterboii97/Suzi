@@ -136,9 +136,32 @@ A production-ready, highly token-efficient Discord AI Bot with an Express.js Web
 
 ---
 
-## ☁️ Step 4: Deploying to Render
+## ☁️ Step 4: Deploying to Railway or Render
 
-This application is engineered for deployment as a **Render Web Service**:
+### Deploying on Railway (Recommended)
+
+1. Go to your [Railway Dashboard](https://railway.com/) and click **New Project** -> **Deploy from GitHub repo**.
+2. Select your repository (`hunterboii97/Suzi`).
+3. Railway automatically detects the production `Dockerfile` and `railway.json`.
+4. Go to the **Variables** tab of your service in Railway and add the required environment variables:
+   - `DISCORD_BOT_TOKEN`
+   - `DISCORD_CLIENT_ID`
+   - `DISCORD_CLIENT_SECRET`
+   - `ADMIN_USER_IDS`
+   - `SUPABASE_URL`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `SESSION_SECRET`: A secure random secret string
+   - `AI_PROVIDER`: `gemini` or `openai`
+   - `GEMINI_API_KEY` (and/or `OPENAI_API_KEY`)
+   - `PORT`: `3000` (optional, Railway assigns `PORT` dynamically)
+5. Go to **Settings** -> **Networking** -> click **Generate Domain** (e.g. `suzi-production.up.railway.app`).
+6. Set `APP_URL` in the Variables tab to your domain: `https://suzi-production.up.railway.app` (without trailing slash).
+7. Copy `https://suzi-production.up.railway.app/auth/discord/callback` and add it to **Redirects** in your Discord Developer Portal -> **OAuth2** tab.
+8. Railway will build and deploy the container. You can monitor the live logs and `/health` status.
+
+---
+
+### Deploying on Render
 
 1. Push your repository to GitHub or GitLab.
 2. Go to your [Render Dashboard](https://dashboard.render.com/) and click **New +** -> **Web Service**.

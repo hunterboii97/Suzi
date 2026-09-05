@@ -1,26 +1,25 @@
-.git
-.gitignore
-.venv
-__pycache__
-*.pyc
-*.pyo
-.pytest_cache
-tests/
-temp/
-.env
-config/runtime.yml
-config/chat_sys_prompt.txt
-config/workspace_sys_prompt.txt
-assets/fonts/
-workspace/
-CLAUDE.md
-README.md
-LICENSE
-
-# Docs site (VitePress) — not needed in the bot image
-docs/
+# Dependencies (re-installed cleanly in container)
 node_modules/
-package.json
-pnpm-lock.yaml
-pnpm-workspace.yaml
-.poc/
+npm-debug.log*
+
+# Git metadata
+.git/
+.github/
+
+# Sensitive environment variables (injected via Railway Variables tab)
+.env
+.env.*
+!sample.env
+!.env.example
+
+# Temporary & cache directories
+temp/
+logs/
+*.log
+.DS_Store
+.idea/
+.vscode/
+
+# Testing & doc builds
+tests/
+docs/

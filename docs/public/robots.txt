@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://zhiro-labs.github.io/dango/sitemap.xml
