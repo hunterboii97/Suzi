@@ -1,5 +1,5 @@
 # Production Node.js container for Suzi Discord Bot & Web Dashboard
-FROM node:20-alpine
+FROM node:22-alpine
 
 # Install dumb-init to properly handle PID 1 signals (SIGINT, SIGTERM)
 RUN apk add --no-cache dumb-init

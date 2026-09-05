@@ -1,7 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
+import WebSocket from 'ws';
 import dotenv from 'dotenv';
 
 dotenv.config();
+
+// Polyfill native WebSocket for Node environments (< Node 22)
+if (typeof globalThis.WebSocket === 'undefined') {
+  globalThis.WebSocket = WebSocket;
+}
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY;
@@ -13,6 +19,9 @@ if (!supabaseUrl || !supabaseKey) {
 export const supabase = (supabaseUrl && supabaseKey)
   ? createClient(supabaseUrl, supabaseKey, {
       auth: { persistSession: false },
+      realtime: {
+        transport: WebSocket,
+      },
     })
   : null;
 
